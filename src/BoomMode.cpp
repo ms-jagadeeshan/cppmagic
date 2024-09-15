@@ -20,6 +20,25 @@ void cmg::BoomMode::preProcessTags(const std::pair<cmgSPVector<cmg::TagInfo>, cm
 
 ////////////////////////////////////////////////////////////////////////
 
+void cmg::BoomMode::runImpl(cmgVector<std::string>& nonTargetLines, cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
+{
+    if (protoImplPairs.empty())
+        return;
+
+    std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairImplStartLineComparator());
+
+    loadCode(nonTargetLines, protoImplPairs, headerFile, sourceFile);
+    if (mActiveComparator == nullptr)
+    {
+        LOG_ERROR("No comparator set!");
+        return;
+    }
+
+    std::sort(protoImplPairs.begin(), protoImplPairs.end(), mActiveComparator);
+}
+
+////////////////////////////////////////////////////////////////////////
+
 cmgVector<cmg::ProtoImplTagPair> cmg::BoomMode::setupProtoImplPairs(const std::pair<cmgSPVector<cmg::TagInfo>, cmgSPVector<cmg::TagInfo>>& tagPairs)
 {
     cmgVector<cmg::ProtoImplTagPair> protoImplPairs;
@@ -46,25 +65,6 @@ cmgVector<cmg::ProtoImplTagPair> cmg::BoomMode::setupProtoImplPairs(const std::p
     }
     fillEmptyImpl(protoImplPairs);
     return protoImplPairs;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-void cmg::BoomMode::runImpl(cmgVector<std::string>& nonTargetLines, cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
-{
-    if (protoImplPairs.empty())
-        return;
-
-    std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairImplStartLineComparator());
-
-    loadCode(nonTargetLines, protoImplPairs, headerFile, sourceFile);
-    if (mActiveComparator == nullptr)
-    {
-        LOG_ERROR("No comparator set!");
-        return;
-    }
-
-    std::sort(protoImplPairs.begin(), protoImplPairs.end(), mActiveComparator);
 }
 
 ////////////////////////////////////////////////////////////////////////

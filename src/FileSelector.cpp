@@ -57,6 +57,13 @@ cmgVector<std::pair<FilePath, FilePath>> cmg::FileSelector::selectFilePairs(cons
     return pairedFiles;
 }
 
+cmgVector<std::pair<FilePath, FilePath>> cmg::FileSelector::selectFilePairs(const std::string& singleSrcFolder, bool allowUnpaired, int maxDepth)
+{
+    return selectFilePairs(singleSrcFolder, singleSrcFolder, allowUnpaired, maxDepth);
+}
+
+////////////////////////////////////////////////////////////////////////
+
 cmgVector<std::pair<FilePath, FilePath>> cmg::FileSelector::selectFilePairsFromFiles(const cmgVector<std::string>& files, bool allowUnpaired)
 {
     std::unordered_map<std::string, std::string> headerFiles;
@@ -91,13 +98,6 @@ cmgVector<std::pair<FilePath, FilePath>> cmg::FileSelector::selectFilePairsFromF
         }
     }
     return pairedFiles;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-cmgVector<std::pair<FilePath, FilePath>> cmg::FileSelector::selectFilePairs(const std::string& singleSrcFolder, bool allowUnpaired, int maxDepth)
-{
-    return selectFilePairs(singleSrcFolder, singleSrcFolder, allowUnpaired, maxDepth);
 }
 
 ////////////////////////////////////////////////////////////////////////

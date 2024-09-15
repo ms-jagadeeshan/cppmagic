@@ -61,30 +61,6 @@ void cmg::MagicModeBase::preProcessTags(const std::pair<cmgSPVector<cmg::TagInfo
 
 ////////////////////////////////////////////////////////////////////////
 
-void cmg::MagicModeBase::fillEmptyImpl(cmgVector<cmg::ProtoImplTagPair>& protoImplPairs)
-{
-    for (int i = 0; i < protoImplPairs.size();)
-    {
-        const auto& prototype = protoImplPairs[i].mPrototype;
-        auto& impl = protoImplPairs[i].mImplementation;
-
-        if (prototype == nullptr)
-            protoImplPairs.erase(protoImplPairs.begin() + i);
-        else
-        {
-            if (impl == nullptr)
-            {
-                auto implTag = std::make_shared<cmg::TagInfo>();
-                cmg::TagUtility::fillImplFromPrototype(implTag, prototype);
-                impl = implTag;
-            }
-            i++;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
 void cmg::MagicModeBase::setupParameters(const cmgSPVector<cmg::TagInfo>& tags, const cmg::FileCategory& fileCategory)
 {
     auto parameterTags = cmg::TagUtility::filter(tags, {cmg::TagKind::PARAMETER});
@@ -203,6 +179,30 @@ void cmg::MagicModeBase::writeCode(cmgVector<std::string>& nonTargetLines, cmgVe
     }
 
     fileStream << nonTargetLines.back();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::MagicModeBase::fillEmptyImpl(cmgVector<cmg::ProtoImplTagPair>& protoImplPairs)
+{
+    for (int i = 0; i < protoImplPairs.size();)
+    {
+        const auto& prototype = protoImplPairs[i].mPrototype;
+        auto& impl = protoImplPairs[i].mImplementation;
+
+        if (prototype == nullptr)
+            protoImplPairs.erase(protoImplPairs.begin() + i);
+        else
+        {
+            if (impl == nullptr)
+            {
+                auto implTag = std::make_shared<cmg::TagInfo>();
+                cmg::TagUtility::fillImplFromPrototype(implTag, prototype);
+                impl = implTag;
+            }
+            i++;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////

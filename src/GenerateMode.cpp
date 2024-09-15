@@ -11,6 +11,24 @@ cmg::GenerateMode::GenerateMode(const cmg::Settings& settings, const cmgSP<cmg::
 
 ////////////////////////////////////////////////////////////////////////
 
+void cmg::GenerateMode::runImpl(cmgVector<std::string>& nonTargetLines, cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
+{
+    std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairProtoStartLineComparator());
+
+    nonTargetLines.clear();
+    nonTargetLines.reserve(protoImplPairs.size() + 2);
+
+    auto includeLine = cmg::TagUtility::getHeaderIncludeLine(headerFile);
+    nonTargetLines.push_back(mSettings.mHeaderCode + includeLine);
+    for (int i = 0; i < protoImplPairs.size(); ++i)
+    {
+        nonTargetLines.push_back(mSettings.mFunctionSpacer);
+    }
+    nonTargetLines.push_back(mSettings.mFooterCode);
+}
+
+////////////////////////////////////////////////////////////////////////
+
 void cmg::GenerateMode::preProcessTags(const std::pair<cmgSPVector<cmg::TagInfo>, cmgSPVector<cmg::TagInfo>>& tagPairs)
 {
     setupParameters(tagPairs.first, cmg::FileCategory::Header);
@@ -33,24 +51,6 @@ cmgVector<cmg::ProtoImplTagPair> cmg::GenerateMode::setupProtoImplPairs(const st
 
     fillEmptyImpl(protoImplPairs);
     return protoImplPairs;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-void cmg::GenerateMode::runImpl(cmgVector<std::string>& nonTargetLines, cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
-{
-    std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairProtoStartLineComparator());
-
-    nonTargetLines.clear();
-    nonTargetLines.reserve(protoImplPairs.size() + 2);
-
-    auto includeLine = cmg::TagUtility::getHeaderIncludeLine(headerFile);
-    nonTargetLines.push_back(mSettings.mHeaderCode + includeLine);
-    for (int i = 0; i < protoImplPairs.size(); ++i)
-    {
-        nonTargetLines.push_back(mSettings.mFunctionSpacer);
-    }
-    nonTargetLines.push_back(mSettings.mFooterCode);
 }
 
 ////////////////////////////////////////////////////////////////////////

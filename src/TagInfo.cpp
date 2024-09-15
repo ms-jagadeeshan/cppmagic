@@ -34,16 +34,6 @@ void cmg::TagInfo::serializeParameters()
 
 ////////////////////////////////////////////////////////////////////////
 
-std::string cmg::TagInfo::scopedName()
-{
-    if (!mScope.empty())
-        return mScope + "::" + mSymbolName;
-    else
-        return mSymbolName;
-}
-
-////////////////////////////////////////////////////////////////////////
-
 void cmg::TagInfo::buildCodeStr()
 {
     if (mTagKind == cmg::TagKind::FUNCTION)
@@ -63,6 +53,16 @@ void cmg::TagInfo::buildCodeStr()
 int cmg::TagInfo::parametersCount() const
 {
     return mParameters.size();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+std::string cmg::TagInfo::scopedName()
+{
+    if (!mScope.empty())
+        return mScope + "::" + mSymbolName;
+    else
+        return mSymbolName;
 }
 
 ////////////////////////////////////////////////////////////////////////

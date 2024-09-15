@@ -24,11 +24,16 @@ FilePath::FilePath(const std::string& filePath, const std::string& relativeTo)
 
 ////////////////////////////////////////////////////////////////////////
 
-void FilePath::updateBaseDir(const std::string& baseDir)
+void FilePath::print() const
 {
-    auto relPath = mPath.lexically_relative(baseDir);
-    mRelPath = relPath.string();
-    mRelPathStem = relPath.replace_extension("");
+    std::cout << "Unresolved Path: " << mUnresolvedPath << std::endl;
+    std::cout << "Full Path: " << mFullPath << std::endl;
+    std::cout << "File Name: " << mFileName << std::endl;
+    std::cout << "File Stem: " << mFileStem << std::endl;
+    std::cout << "Extension: " << mExt << std::endl;
+    std::cout << "Relative Path: " << mRelPath << std::endl;
+    std::cout << "Relative Path without Extension: " << mRelPathStem << std::endl;
+    std::cout << "Base Directory for Relative Path: " << mBaseDir << std::endl;
 }
 
 void FilePath::update(const std::string& filePath, const std::string& baseDir)
@@ -50,16 +55,11 @@ void FilePath::update(const std::string& filePath, const std::string& baseDir)
 
 ////////////////////////////////////////////////////////////////////////
 
-void FilePath::print() const
+void FilePath::updateBaseDir(const std::string& baseDir)
 {
-    std::cout << "Unresolved Path: " << mUnresolvedPath << std::endl;
-    std::cout << "Full Path: " << mFullPath << std::endl;
-    std::cout << "File Name: " << mFileName << std::endl;
-    std::cout << "File Stem: " << mFileStem << std::endl;
-    std::cout << "Extension: " << mExt << std::endl;
-    std::cout << "Relative Path: " << mRelPath << std::endl;
-    std::cout << "Relative Path without Extension: " << mRelPathStem << std::endl;
-    std::cout << "Base Directory for Relative Path: " << mBaseDir << std::endl;
+    auto relPath = mPath.lexically_relative(baseDir);
+    mRelPath = relPath.string();
+    mRelPathStem = relPath.replace_extension("");
 }
 
 ////////////////////////////////////////////////////////////////////////

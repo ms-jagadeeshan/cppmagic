@@ -169,6 +169,53 @@ void cmg::TagUtility::write(const std::vector<std::string>& filePaths, const std
 
 ////////////////////////////////////////////////////////////////////////
 
+cmgSPVector<cmg::TagInfo> cmg::TagUtility::filter(const cmgSPVector<cmg::TagInfo>& tags, const cmgVector<cmg::TagKind>& tagKinds)
+{
+    cmgSPVector<cmg::TagInfo> filteredTags{};
+    for (const auto& tag : tags)
+    {
+        if (cmg::utils::contains(tagKinds, tag->mTagKind))
+            filteredTags.push_back(tag);
+    }
+
+    return filteredTags;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::TagUtility::fillImplFromPrototype(cmgSP<cmg::TagInfo> implTag, const cmgSP<cmg::TagInfo>& protoTag)
+{
+    if (implTag == nullptr || protoTag == nullptr)
+        return;
+
+    if (protoTag->mTagKind != cmg::TagKind::PROTOTYPE)
+        return;
+
+    implTag->mSymbolName = protoTag->mSymbolName;
+    implTag->mTagKind = cmg::TagKind::FUNCTION;
+    implTag->mTypeRef = protoTag->mTypeRef;
+    implTag->mScope = protoTag->mScope;
+    implTag->mScopeKind = protoTag->mScopeKind;
+    implTag->mSignature = protoTag->mSignature;
+    implTag->mOgSignature = protoTag->mOgSignature;
+    implTag->mParameters = protoTag->mParameters;
+    implTag->mParametersStr = protoTag->mParametersStr;
+
+    implTag->buildCodeStr();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+std::string cmg::TagUtility::getHeaderIncludeLine(const FilePath& filePath)
+{
+    if (filePath.empty())
+        return "";
+
+    return "#include \"" + filePath.relativePath() + "\"\n";
+}
+
+////////////////////////////////////////////////////////////////////////
+
 void cmg::TagUtility::print(const cmgSP<cmg::TagInfo>& tag)
 {
     std::string str;
@@ -184,6 +231,64 @@ void cmg::TagUtility::print(const cmgSP<cmg::TagInfo>& tag)
     str += "Signature  :" + tag->mOgSignature + "\n";
     str += "Extras     :" + tag->mExtras + "\n";
     str += "Code       :" + tag->mStr + "\n";
+}
+
+////////////////////////////////////////////////////////////////////////
+
+std::string cmg::TagUtility::sanitizeInput(const std::string& input)
+{
+    std::string sanitized;
+    for (char c : input)
+    {
+        if (c == '"' || c == '\'' || c == ';')
+        {
+            sanitized += '\\';
+        }
+        sanitized += c;
+    }
+    return sanitized;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+cmgSP<cmg::TagInfo> cmg::TagUtility::readImpl(const std::string& tagsJsonData)
+{
+    if (tagsJsonData.empty())
+        return nullptr;
+
+    nlohmann::json j;
+    try
+    {
+        j = nlohmann::json::parse(tagsJsonData);
+    }
+    catch (const nlohmann::json::parse_error& e)
+    {
+        fprintf(stderr, "Error: %s", e.what());
+        return nullptr;
+    }
+
+    if (!j.contains("kind") || !j.contains("name"))
+        return nullptr;
+
+    auto tagInfo = std::make_shared<TagInfo>();
+    tagInfo->mSymbolName = j.value("name", "");
+    tagInfo->mFilePath = j.value("path", "");
+    tagInfo->mStartLine = j.value("line", -1);
+    tagInfo->mEndLine = j.value("end", -1);
+    std::string tagKind = j.value("kind", "");
+    tagInfo->mTagKind = cmg::tagKindStrToEnum(tagKind);
+    auto returnType = j.value("typeref", "");
+    if (returnType.size() >= 9)
+        tagInfo->mTypeRef = returnType.substr(9);
+    tagInfo->mAccessType = j.value("access", "");
+    tagInfo->mScope = j.value("scope", "");
+    std::string scopeKind = j.value("kind", "");
+    tagInfo->mScopeKind = cmg::scopeKindStrToEnum(scopeKind);
+    tagInfo->mOgSignature = j.value("signature", "");
+    tagInfo->mExtras = j.value("extras", "");
+    tagInfo->mNth = j.value("nth", -1);
+
+    return tagInfo;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -248,111 +353,6 @@ std::string cmg::TagUtility::executeCommand(const std::string& command)
         }
     }
     return result;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-std::string cmg::TagUtility::sanitizeInput(const std::string& input)
-{
-    std::string sanitized;
-    for (char c : input)
-    {
-        if (c == '"' || c == '\'' || c == ';')
-        {
-            sanitized += '\\';
-        }
-        sanitized += c;
-    }
-    return sanitized;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-cmgSP<cmg::TagInfo> cmg::TagUtility::readImpl(const std::string& tagsJsonData)
-{
-    if (tagsJsonData.empty())
-        return nullptr;
-
-    nlohmann::json j;
-    try
-    {
-        j = nlohmann::json::parse(tagsJsonData);
-    }
-    catch (const nlohmann::json::parse_error& e)
-    {
-        fprintf(stderr, "Error: %s", e.what());
-        return nullptr;
-    }
-
-    if (!j.contains("kind") || !j.contains("name"))
-        return nullptr;
-
-    auto tagInfo = std::make_shared<TagInfo>();
-    tagInfo->mSymbolName = j.value("name", "");
-    tagInfo->mFilePath = j.value("path", "");
-    tagInfo->mStartLine = j.value("line", -1);
-    tagInfo->mEndLine = j.value("end", -1);
-    std::string tagKind = j.value("kind", "");
-    tagInfo->mTagKind = cmg::tagKindStrToEnum(tagKind);
-    auto returnType = j.value("typeref", "");
-    if (returnType.size() >= 9)
-        tagInfo->mTypeRef = returnType.substr(9);
-    tagInfo->mAccessType = j.value("access", "");
-    tagInfo->mScope = j.value("scope", "");
-    std::string scopeKind = j.value("kind", "");
-    tagInfo->mScopeKind = cmg::scopeKindStrToEnum(scopeKind);
-    tagInfo->mOgSignature = j.value("signature", "");
-    tagInfo->mExtras = j.value("extras", "");
-    tagInfo->mNth = j.value("nth", -1);
-
-    return tagInfo;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-cmgSPVector<cmg::TagInfo> cmg::TagUtility::filter(const cmgSPVector<cmg::TagInfo>& tags, const cmgVector<cmg::TagKind>& tagKinds)
-{
-    cmgSPVector<cmg::TagInfo> filteredTags{};
-    for (const auto& tag : tags)
-    {
-        if (cmg::utils::contains(tagKinds, tag->mTagKind))
-            filteredTags.push_back(tag);
-    }
-
-    return filteredTags;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-void cmg::TagUtility::fillImplFromPrototype(cmgSP<cmg::TagInfo> implTag, const cmgSP<cmg::TagInfo>& protoTag)
-{
-    if (implTag == nullptr || protoTag == nullptr)
-        return;
-
-    if (protoTag->mTagKind != cmg::TagKind::PROTOTYPE)
-        return;
-
-    implTag->mSymbolName = protoTag->mSymbolName;
-    implTag->mTagKind = cmg::TagKind::FUNCTION;
-    implTag->mTypeRef = protoTag->mTypeRef;
-    implTag->mScope = protoTag->mScope;
-    implTag->mScopeKind = protoTag->mScopeKind;
-    implTag->mSignature = protoTag->mSignature;
-    implTag->mOgSignature = protoTag->mOgSignature;
-    implTag->mParameters = protoTag->mParameters;
-    implTag->mParametersStr = protoTag->mParametersStr;
-
-    implTag->buildCodeStr();
-}
-
-////////////////////////////////////////////////////////////////////////
-
-std::string cmg::TagUtility::getHeaderIncludeLine(const FilePath& filePath)
-{
-    if (filePath.empty())
-        return "";
-
-    return "#include \"" + filePath.relativePath() + "\"\n";
 }
 
 ////////////////////////////////////////////////////////////////////////
