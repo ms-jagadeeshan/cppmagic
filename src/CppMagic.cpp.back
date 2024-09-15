@@ -1,0 +1,250 @@
+#include "cppmagic/Core.h"
+#include "cppmagic/CppMagic.h"
+#include "cppmagic/SortingMethod.h"
+#include "cppmagic/TagUtility.h"
+
+////////////////////////////////////////////////////////////////////////
+
+cmg::CppMagic::CppMagic(const cmgSP<cmg::TagManager> tagManager, const cmg::Settings& settings)
+    : mTagManager(tagManager), mSettings(settings)
+{
+    for (auto sortingMethod : cmg::sortingMethods())
+    {
+        auto comparator = cmg::getComparator(cmg::sortingStrToEnum(sortingMethod));
+        mComparatorMap[sortingMethod] = comparator;
+    }
+    mActiveComparator = cmg::getComparator(mSettings.mSortingMethod);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+bool cmg::CppMagic::run(const cmgVector<std::pair<FilePath, FilePath>>& filePairs)
+{
+    if (mTagManager == nullptr)
+    {
+        LOG_CRITICAL("TagManager is nullptr");
+        return false;
+    }
+
+    switch (mSettings.mMagicMode)
+    {
+    case MagicMode::GENERATE:
+        mFillEmptyImpl = true;
+        mSort = false;
+        break;
+    case MagicMode::SORT:
+        mFillEmptyImpl = false;
+        mSort = true;
+        break;
+    case MagicMode::BOOM:
+        mFillEmptyImpl = true;
+        mSort = true;
+        break;
+    }
+
+    for (auto& [headerFile, sourceFile] : filePairs)
+    {
+        // Check if source file given.
+        FilePath newSourceFile = sourceFile;
+        if (sourceFile.empty())
+        {
+            auto baseDir = sourceFile.baseDir();
+            auto relPath = headerFile.relativePathStem();
+            std::string sourceFilePath = baseDir + "/" + relPath + mSettings.mHeaderExtensions.front();
+            newSourceFile = FilePath(sourceFilePath, baseDir);
+        }
+
+        const auto& tagPairs = mTagManager->getTagPairs(headerFile.relativePathStem());
+        auto protoImplPairs = setupProtoImplPairs(tagPairs);
+        if (mFillEmptyImpl)
+            fillEmptyImpl(protoImplPairs, newSourceFile);
+        filterAndProcess(protoImplPairs, newSourceFile);
+        loadCodeStr(protoImplPairs, headerFile, newSourceFile);
+    }
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::CppMagic::registerComparator(const std::string& name, cmg::MagicComparator& comparator)
+{
+    mComparatorMap[name] = comparator;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::CppMagic::filterAndProcess(cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& newSourceFile)
+{
+    for (int i = 0; i < protoImplPairs.size();)
+    {
+        if (protoImplPairs[i].mImplementation == nullptr)
+            protoImplPairs.erase(protoImplPairs.begin() + i);
+        else
+            ++i;
+    }
+    std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairImplStartLineComparator());
+}
+
+cmgVector<cmg::ProtoImplTagPair> cmg::CppMagic::setupProtoImplPairs(const std::pair<cmgSPVector<cmg::TagInfo>, cmgSPVector<cmg::TagInfo>>& tagPairs)
+{
+    cmgVector<cmg::ProtoImplTagPair> protoImplPairs;
+
+    preProcess(tagPairs);
+
+    auto prototypeTags = cmg::TagUtility::filter(tagPairs.first, {cmg::TagKind::PROTOTYPE});
+    auto implTags = cmg::TagUtility::filter(tagPairs.second, {cmg::TagKind::FUNCTION});
+
+    cmgUOMap<std::string, cmgSPVector<cmg::TagInfo>> implTagMap;
+    for (const auto& tag : implTags)
+        implTagMap[tag->mScope + tag->mSymbolName].push_back(tag);
+
+    // Iterate over header tags and find the source map, and check they are equal using .equals()
+    // if equal create ProtoImplTagPair, else create ProtoImplTagPair with nullptr source
+    for (auto prototypeTag : prototypeTags)
+    {
+        cmgSP<cmg::TagInfo> implTag = nullptr;
+        auto possibleOverloads = implTagMap[prototypeTag->mScope + prototypeTag->mSymbolName];
+        for (auto possibleOverload : possibleOverloads)
+        {
+            if (prototypeTag->equals(possibleOverload))
+            {
+                implTag = possibleOverload;
+                break;
+            }
+        }
+        protoImplPairs.emplace_back(prototypeTag, implTag);
+    }
+    return protoImplPairs;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::CppMagic::preProcess(const std::pair<cmgSPVector<cmg::TagInfo>, cmgSPVector<cmg::TagInfo>>& tagPairs)
+{
+
+    setupParameters(tagPairs.first, cmg::FileCategory::Header);
+    setupParameters(tagPairs.second, cmg::FileCategory::Source);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::CppMagic::setupParameters(const cmgSPVector<cmg::TagInfo>& tags, const cmg::FileCategory& fileCategory)
+{
+    auto parameterTags = cmg::TagUtility::filter(tags, {cmg::TagKind::PARAMETER});
+
+    cmg::TagKind filter;
+    switch (fileCategory)
+    {
+    case cmg::FileCategory::Header:
+        filter = cmg::TagKind::PROTOTYPE;
+        break;
+    case cmg::FileCategory::Source:
+        filter = cmg::TagKind::FUNCTION;
+        break;
+    default:
+        return;
+    }
+
+    auto functionTags = cmg::TagUtility::filter(tags, {filter});
+    std::sort(parameterTags.begin(), parameterTags.end(), cmg::TagInfoStartLineComparator());
+
+    for (const auto& tag : functionTags)
+    {
+        auto functionScopedName = tag->mScope + tag->mSymbolName;
+        for (const auto& parameterTag : parameterTags)
+        {
+            if (functionScopedName == parameterTag->mScope)
+            {
+                if ((parameterTag->mStartLine > tag->mStartLine) && (parameterTag->mEndLine < tag->mEndLine))
+                {
+                    tag->mParameters.push_back(parameterTag);
+                }
+            }
+        }
+        tag->serializeParameters();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::CppMagic::fillEmptyImpl(cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& sourceFile)
+{
+    for (int i = 0; i < protoImplPairs.size();)
+    {
+        const auto& prototype = protoImplPairs[i].mPrototype;
+        auto& impl = protoImplPairs[i].mImplementation;
+
+        if (prototype == nullptr)
+            protoImplPairs.erase(protoImplPairs.begin() + i);
+        else
+        {
+            if (impl == nullptr)
+            {
+                auto implTag = std::make_shared<cmg::TagInfo>();
+                cmg::TagUtility::fillImplFromPrototype(implTag, prototype);
+                impl = implTag;
+                impl->mFilePath = sourceFile.relativePath();
+                impl->mFile = sourceFile;
+            }
+            i++;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void cmg::CppMagic::loadCodeStr(cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
+{
+    if (!headerFile.isRegularFile())
+        return;
+
+    std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairImplStartLineComparator());
+
+    cmgVector<std::string> headerFileLines = cmg::utils::readLinesFromFile(headerFile.absolutePath());
+    cmgVector<std::string> sourceFileLines = cmg::utils::readLinesFromFile(sourceFile.absolutePath());
+
+    std::vector<std::string> nonTargetLines;
+    nonTargetLines.reserve(protoImplPairs.size() + 2);
+    nonTargetLines.push_back(mSettings.mHeaderSpacer);
+
+    int currentIndex = 1;
+    for (auto protoImplPair : protoImplPairs)
+    {
+        const auto& prototype = protoImplPair.mPrototype;
+        auto& impl = protoImplPair.mImplementation;
+        auto startIndex = impl->mStartLine - 1;
+        auto endIndex = impl->mStartLine - 1;
+        if (startIndex == -1)
+        {
+            nonTargetLines.push_back(mSettings.mFunctionSpacer);
+            continue;
+        }
+
+        std::ostringstream target;
+        std::ostringstream nonTarget;
+
+        while (currentIndex < startIndex && currentIndex < sourceFileLines.size())
+        {
+            nonTarget << sourceFileLines[currentIndex];
+            currentIndex++;
+        }
+        nonTargetLines.push_back(nonTarget.str());
+
+        while (currentIndex <= endIndex && currentIndex < sourceFileLines.size())
+        {
+            target << sourceFileLines[currentIndex];
+            currentIndex++;
+        }
+        impl->mStr = target.str();
+    }
+    std::ostringstream footer;
+    while (currentIndex < sourceFileLines.size())
+    {
+        footer << sourceFileLines[currentIndex];
+        currentIndex++;
+    }
+    nonTargetLines.push_back(footer.str());
+}
+
+////////////////////////////////////////////////////////////////////////
