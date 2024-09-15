@@ -177,7 +177,7 @@ void cmg::MagicModeBase::loadCode(cmgVector<std::string>& nonTargetLines, cmgVec
 
 void cmg::MagicModeBase::writeCode(cmgVector<std::string>& nonTargetLines, cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
 {
-    if (nonTargetLines.empty() && protoImplPairs.empty())
+    if (nonTargetLines.empty() || protoImplPairs.empty())
     {
         LOG_ERROR("No code to write");
         return;

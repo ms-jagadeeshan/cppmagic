@@ -55,13 +55,12 @@ To sort C++ files based on their header files, you can specify directories or in
 
 1. **Sorting Directories**: If you have both headers and sources in separate directories:
 
-- **HEADER_FOLDER**: The directory containing your header files (e.g., ``include/mylibrary``).
-- **SOURCE_FOLDER**: The directory where the source files exist or to be generated (e.g., ``src/``).
+- HEADER_FOLDER: The directory containing your header files (e.g., ``include/mylibrary``).
+- SOURCE_FOLDER: The directory where the source files exist or to be generated (e.g., ``src/``).
 
 .. code-block:: bash
    
    ./cppmagic sort [HEADER_FOLDER] [SOURCE_FOLDER]
-   
 
 2. **Sorting Single Folder**: If your headers and sources are in the same directory:
 
@@ -122,6 +121,11 @@ To sort functions in .cpp with respect to function order in header.
 By default, files won't be overwritted. You could use ``-i`` or ``--in-place`` flag to overwrite.
 
 ``cppmagic sort -i src``
+
+Known Bugs
+==========
+
+- Functions will be generated for pure virtual functions and deleted constructor/destructor.
 
 Contributing
 ============

@@ -91,6 +91,12 @@ bool cmg::Settings::processArguments(int argc, char** argv)
         }
     }
 
+    if (!std::filesystem::is_regular_file(mCTagsPath))
+    {
+        LOG_CRITICAL("ctags executable not found, pass the path using '--ctags-path'");
+        exit(1);
+    }
+
     mSortingMethod = cmg::sortingStrToEnum(mSortingMethodStr);
     LOG_INFO("Sorting Method   : " + cmg::sortingEnumToStr(mSortingMethod));
     LOG_INFO("Header Extensions: " + cmg::utils::join(mHeaderExtensions));
