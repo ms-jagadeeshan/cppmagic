@@ -36,6 +36,8 @@ void FilePath::print() const
     std::cout << "Base Directory for Relative Path: " << mBaseDir << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////
+
 void FilePath::update(const std::string& filePath, const std::string& baseDir)
 {
     mBaseDir = std::filesystem::absolute(baseDir).lexically_normal().string();
@@ -76,10 +78,13 @@ bool FilePath::isRegularFile() const
     return std::filesystem::is_regular_file(mPath);
 }
 
+////////////////////////////////////////////////////////////////////////
+
 std::filesystem::path FilePath::stdPath() const
 {
     return mPath;
 }
+
 ////////////////////////////////////////////////////////////////////////
 
 bool FilePath::empty() const
