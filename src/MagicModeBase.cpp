@@ -159,7 +159,7 @@ void cmg::MagicModeBase::writeCode(cmgVector<std::string>& nonTargetLines, cmgVe
 {
     if (nonTargetLines.empty() || protoImplPairs.empty())
     {
-        LOG_ERROR("'%s' has no code to write", headerFile.absolutePath().c_str());
+        LOG_WARN("'%s' has no code to write", headerFile.absolutePath().c_str());
         return;
     }
     auto fileStream = getFileStream(headerFile, sourceFile);

@@ -13,6 +13,9 @@ cmg::GenerateMode::GenerateMode(const cmg::Settings& settings, const cmgSP<cmg::
 
 void cmg::GenerateMode::runImpl(cmgVector<std::string>& nonTargetLines, cmgVector<cmg::ProtoImplTagPair>& protoImplPairs, const FilePath& headerFile, const FilePath& sourceFile)
 {
+    if (protoImplPairs.empty())
+        return;
+
     std::sort(protoImplPairs.begin(), protoImplPairs.end(), cmg::TagPairProtoStartLineComparator());
 
     nonTargetLines.clear();
