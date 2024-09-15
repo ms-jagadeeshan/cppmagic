@@ -54,10 +54,10 @@ public:
     std::string mScope;
     // Store the scope kind. i.e class, function.
     ScopeKind mScopeKind;
-    // Store the signature(parameter and property).
+    // Store the store the pattern.
+    std::string mPattern;
+    // Store the signature.
     std::string mSignature;
-    // Store the original signature.
-    std::string mOgSignature;
     // Store the extras.
     std::string mExtras;
     // Store the code.
@@ -68,6 +68,11 @@ public:
     cmgSPVector<cmg::TagInfo> mParameters;
     // Store the parameters string(comma seperated).
     std::string mParametersStr;
+
+    // Store the defining qualifier.
+    const static cmgVector<std::string> mDefQualifier;
+    // Store the allowd qualifier.
+    const static cmgVector<std::string> mAllowedQualifier;
 };
 
 struct TagInfoParameterComparator

@@ -1,6 +1,14 @@
 #include "cppmagic/TagInfo.h"
 
+#include <regex>
+
+#include "cppmagic/Logger.h"
 #include "cppmagic/Utils.h"
+
+////////////////////////////////////////////////////////////////////////
+
+const cmgVector<std::string> cmg::TagInfo::mDefQualifier = {"0", "default", "delete"};
+const cmgVector<std::string> cmg::TagInfo::mAllowedQualifier = {"final", "override", "noexcept", "const"};
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -38,13 +46,28 @@ void cmg::TagInfo::buildCodeStr()
 {
     if (mTagKind == cmg::TagKind::FUNCTION)
     {
+        auto qualifier = extractQualifier();
+        // If qualifier any of delete, default, 0, then don't build c++ code.
+        LOG_DEBUG("Symbol : %s , qualifier : %s", scopedName().c_str(), qualifier.c_str());
+        if (cmg::utils::contains(mDefQualifier, qualifier))
+        {
+            LOG_DEBUG("Function '%s' declaration contains qualifier '%s', so not building code.", scopedName().c_str(), qualifier.c_str());
+            mStr = "";
+            return;
+        }
+        // If qualifier is final, override, const, noexcept, then allow.
+        if (cmg::utils::contains(mAllowedQualifier, qualifier))
+            qualifier = " " + qualifier;
+        else
+            qualifier = "";
+
         cmgVector<std::string> paramStr{};
         for (auto parameter : mParameters)
             paramStr.push_back(parameter->mTypeRef + " " + parameter->mSymbolName);
 
         mStr = mTypeRef + " " + this->scopedName()
                + "(" + cmg::utils::join(paramStr, ", ") + ")"
-               + this->extractQualifier() + "\n{\n}\n";
+               + qualifier + "\n{\n}\n";
     }
 }
 
@@ -69,7 +92,13 @@ std::string cmg::TagInfo::scopedName()
 
 std::string cmg::TagInfo::extractQualifier() const
 {
-    return "";
+    static std::regex pattern(R"(\)\s*=?\s*(\w+|\d+)\s*;\s*\$\/$)");
+    std::smatch match;
+
+    std::string qualifier = "";
+    if (std::regex_search(mPattern, match, pattern))
+        qualifier = match[1];
+    return qualifier;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -111,6 +111,8 @@ void cmg::MagicModeBase::loadCode(cmgVector<std::string>& nonTargetLines, cmgVec
     nonTargetLines.push_back("");
 
     int currentIndex = 0;
+    bool isFirst = true;
+    // Load functions and nonTargetLines.
     for (auto protoImplPair : protoImplPairs)
     {
         const auto& prototype = protoImplPair.mPrototype;
@@ -122,29 +124,31 @@ void cmg::MagicModeBase::loadCode(cmgVector<std::string>& nonTargetLines, cmgVec
             nonTargetLines.push_back(mSettings.mFunctionSpacer);
             continue;
         }
-
         std::ostringstream target;
         std::ostringstream nonTarget;
 
         while (currentIndex < startIndex && currentIndex < sourceFileLines.size())
+            nonTarget << sourceFileLines[currentIndex++] << "\n";
+
+        if (isFirst)
         {
-            nonTarget << sourceFileLines[currentIndex] << "\n";
-            currentIndex++;
+            nonTargetLines.insert(nonTargetLines.begin(), nonTarget.str());
+            isFirst = false;
         }
-        nonTargetLines.push_back(nonTarget.str());
+        else
+            nonTargetLines.push_back(nonTarget.str());
 
         while (currentIndex <= endIndex && currentIndex < sourceFileLines.size())
-        {
-            target << sourceFileLines[currentIndex] << "\n";
-            currentIndex++;
-        }
+            target << sourceFileLines[currentIndex++] << "\n";
+
         impl->mStr = target.str();
     }
+
+    // Load footer.
     std::ostringstream footer;
     while (currentIndex < sourceFileLines.size())
     {
-        footer << sourceFileLines[currentIndex] << "\n";
-        currentIndex++;
+        footer << sourceFileLines[currentIndex++] << "\n";
     }
     nonTargetLines.push_back(footer.str());
 }
@@ -174,8 +178,11 @@ void cmg::MagicModeBase::writeCode(cmgVector<std::string>& nonTargetLines, cmgVe
 
     for (size_t ntIndex = 1, tIndex = 0; tIndex < protoImplPairs.size(); ++tIndex, ++ntIndex)
     {
-        fileStream << nonTargetLines[ntIndex];
-        fileStream << protoImplPairs[tIndex].mImplementation->mStr;
+        if (!protoImplPairs[tIndex].mImplementation->mStr.empty())
+        {
+            fileStream << nonTargetLines[ntIndex];
+            fileStream << protoImplPairs[tIndex].mImplementation->mStr;
+        }
     }
 
     fileStream << nonTargetLines.back();

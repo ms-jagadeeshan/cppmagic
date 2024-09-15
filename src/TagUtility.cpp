@@ -196,8 +196,8 @@ void cmg::TagUtility::fillImplFromPrototype(cmgSP<cmg::TagInfo> implTag, const c
     implTag->mTypeRef = protoTag->mTypeRef;
     implTag->mScope = protoTag->mScope;
     implTag->mScopeKind = protoTag->mScopeKind;
+    implTag->mPattern = protoTag->mPattern;
     implTag->mSignature = protoTag->mSignature;
-    implTag->mOgSignature = protoTag->mOgSignature;
     implTag->mParameters = protoTag->mParameters;
     implTag->mParametersStr = protoTag->mParametersStr;
 
@@ -228,7 +228,8 @@ void cmg::TagUtility::print(const cmgSP<cmg::TagInfo>& tag)
     str += "Access     :" + tag->mAccessType + "\n";
     str += "Scope      :" + tag->mScope + "\n";
     str += "ScopeKind  :" + tag->scopeKindStr() + "\n";
-    str += "Signature  :" + tag->mOgSignature + "\n";
+    str += "Pattern    :" + tag->mPattern + "\n";
+    str += "Signature  :" + tag->mSignature + "\n";
     str += "Extras     :" + tag->mExtras + "\n";
     str += "Code       :" + tag->mStr + "\n";
 }
@@ -284,7 +285,8 @@ cmgSP<cmg::TagInfo> cmg::TagUtility::readImpl(const std::string& tagsJsonData)
     tagInfo->mScope = j.value("scope", "");
     std::string scopeKind = j.value("kind", "");
     tagInfo->mScopeKind = cmg::scopeKindStrToEnum(scopeKind);
-    tagInfo->mOgSignature = j.value("signature", "");
+    tagInfo->mPattern = j.value("pattern", "");
+    tagInfo->mSignature = j.value("signature", "");
     tagInfo->mExtras = j.value("extras", "");
     tagInfo->mNth = j.value("nth", -1);
 
