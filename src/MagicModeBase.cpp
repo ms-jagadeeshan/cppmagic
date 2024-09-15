@@ -134,7 +134,7 @@ void cmg::MagicModeBase::loadCode(cmgVector<std::string>& nonTargetLines, cmgVec
     nonTargetLines.reserve(protoImplPairs.size() + 2);
     nonTargetLines.push_back("");
 
-    int currentIndex = 1;
+    int currentIndex = 0;
     for (auto protoImplPair : protoImplPairs)
     {
         const auto& prototype = protoImplPair.mPrototype;
