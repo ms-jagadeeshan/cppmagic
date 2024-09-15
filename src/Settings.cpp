@@ -34,8 +34,8 @@ bool cmg::Settings::processArguments(int argc, char** argv)
     addCommonOptions(boom);
     app.require_subcommand();
 
-    sort->add_option("--sort", mSortingMethodStr, "Sorting method. header, alpha");
-    boom->add_option("--sort", mSortingMethodStr, "Sorting method. header, alpha");
+    sort->add_option("--method", mSortingMethodStr, "Sorting method. header, alpha (Default : header)");
+    boom->add_option("--method", mSortingMethodStr, "Sorting method. header, alpha (Default : header)");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -116,9 +116,9 @@ bool cmg::Settings::processArguments(int argc, char** argv)
 
 void cmg::Settings::addCommonOptions(CLI::App* app)
 {
-    app->add_option("-t,--tagfile", mTagFile, "Generated ctags file to use. If empty tags will be generated")
-        ->check(CLI::ExistingFile)
-        ->group("Common Options");
+    // app->add_option("-t,--tagfile", mTagFile, "Generated ctags file to use. If empty tags will be generated")
+    //     ->check(CLI::ExistingFile)
+    //     ->group("Common Options");
 
     app->add_option("--ctags-path", mCTagsPath, "Path of ctags executable.")
         ->default_str("/usr/bin/ctags")
