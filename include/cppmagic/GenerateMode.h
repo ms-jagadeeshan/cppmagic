@@ -4,7 +4,6 @@
 
 namespace cmg
 {
-
 class GenerateMode : public MagicModeBase
 {
 public:
@@ -19,5 +18,4 @@ private:
 
 private:
 };
-
 } // namespace cmg

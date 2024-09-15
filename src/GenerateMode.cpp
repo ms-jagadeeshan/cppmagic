@@ -41,6 +41,9 @@ cmgVector<cmg::ProtoImplTagPair> cmg::GenerateMode::setupProtoImplPairs(const st
     cmgVector<cmg::ProtoImplTagPair> protoImplPairs;
     auto prototypeTags = cmg::TagUtility::filter(tagPairs.first, {cmg::TagKind::PROTOTYPE});
 
+    if (prototypeTags.empty())
+        return {};
+
     // Ignore impl tags.
     for (auto prototypeTag : prototypeTags)
     {

@@ -7,7 +7,6 @@
 
 namespace cmg
 {
-
 class CppMagic
 {
 public:
@@ -16,5 +15,4 @@ public:
 private:
     static cmgSP<cmg::MagicModeBase> getMagicMode(const cmg::MagicMode& mode);
 };
-
 } // namespace cmg

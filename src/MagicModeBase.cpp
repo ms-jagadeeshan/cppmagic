@@ -159,7 +159,7 @@ void cmg::MagicModeBase::writeCode(cmgVector<std::string>& nonTargetLines, cmgVe
 {
     if (nonTargetLines.empty() || protoImplPairs.empty())
     {
-        LOG_ERROR("No code to write");
+        LOG_ERROR("'%s' has no code to write", headerFile.absolutePath().c_str());
         return;
     }
     auto fileStream = getFileStream(headerFile, sourceFile);
@@ -170,7 +170,7 @@ void cmg::MagicModeBase::writeCode(cmgVector<std::string>& nonTargetLines, cmgVe
     // Header + Function Spacers + Footer = Non-Target Code.
     if (nonTargetLines.size() != protoImplPairs.size() + 2)
     {
-        LOG_ERROR("Expected %zu lines in non-target code, got %zu lines only", protoImplPairs.size() + 2, nonTargetLines.size());
+        LOG_ERROR("Expected %zu lines in non-target code, got %zu lines only, while writing '%s'", protoImplPairs.size() + 2, nonTargetLines.size(), headerFile.absolutePath().c_str());
         return;
     }
 

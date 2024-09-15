@@ -6,7 +6,6 @@
 
 namespace cmg
 {
-
 enum class MagicMode
 {
     GENERATE,
@@ -58,5 +57,4 @@ public:
     // Function spacer.
     std::string mFunctionSpacer = "\n//////////////////////////////////////////////////////////////////////////////\n\n";
 };
-
 } // namespace cmg

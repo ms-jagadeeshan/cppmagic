@@ -7,7 +7,6 @@
 
 namespace cmg
 {
-
 using MagicComparator = std::function<bool(const cmg::ProtoImplTagPair&, const cmg::ProtoImplTagPair&)>;
 
 enum class SortingMethod

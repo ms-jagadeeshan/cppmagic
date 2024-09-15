@@ -41,5 +41,4 @@ private:
     // var[index][kind] = {headerTags,sourceTags}
     cmgVector<cmgMap<cmg::TagKind, std::pair<cmgSPVector<cmg::TagInfo>, cmgSPVector<cmg::TagInfo>>>> mTagPairsKindMap;
 };
-
 } // namespace cmg

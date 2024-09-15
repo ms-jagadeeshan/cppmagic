@@ -6,7 +6,6 @@
 
 namespace cmg
 {
-
 class TagUtility
 {
 public:
@@ -21,7 +20,7 @@ public:
     static std::string generate(const std::vector<std::string>& filePaths, const std::string& ctagsPath = "/usr/bin/ctags", const std::string& workingDir = "");
     static std::string generateRecursive(const std::string& folder, const std::string& ctagsPath = "/usr/bin/ctags", const std::string& workingDir = "");
 
-    //
+    // Generate and read the tags.
     static cmgVector<std::pair<cmgSPVector<cmg::TagInfo>, cmgSPVector<cmg::TagInfo>>> generateAndRead(const cmgVector<std::pair<FilePath, FilePath>> filePaths, const std::string& ctagsPath = "/usr/bin/ctags", const std::string& workingDir = "");
 
     // Generate and write tags.
@@ -54,5 +53,4 @@ private:
     static inline std::string mOptions = " --c++-kinds=* --fields=* --output-format=json -o - ";
     static inline std::string mRecursiveOption = " --c++-kinds=* --fields=* --output-format=json --recursive=yes -o - .";
 };
-
 } // namespace cmg

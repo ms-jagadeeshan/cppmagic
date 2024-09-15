@@ -125,5 +125,4 @@ static inline std::string scopeKindEnumToStr(const ScopeKind& kind)
 
     return itr->second;
 }
-
 } // namespace cmg

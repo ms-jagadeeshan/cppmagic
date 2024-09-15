@@ -48,5 +48,4 @@ protected:
     // Store the comparator map.
     cmgMap<std::string, cmg::MagicComparator> mComparatorMap;
 };
-
 } // namespace cmg

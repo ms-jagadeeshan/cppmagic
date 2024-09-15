@@ -7,10 +7,8 @@
 
 namespace cmg
 {
-
 namespace utils
 {
-
 // Join a vector of strings with a delimiter.
 std::string join(const cmgVector<std::string>& strings, const std::string delimiter = ",");
 // Reads a file and returns it as a vector of strings.
@@ -36,6 +34,5 @@ bool contains(const T& container, const S& element)
     auto itr = std::find(std::begin(container), std::end(container), element);
     return itr != std::end(container);
 }
-
 } // namespace utils
 } // namespace cmg

@@ -18,5 +18,4 @@ private:
 
 private:
 };
-
 } // namespace cmg
