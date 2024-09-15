@@ -20,7 +20,7 @@ This program works based on the output generate by ctags.
 
    git clone https://github.com/ms-jagadeeshan/cppmagic.git
    cd cppmagic && mkdir build && cd build
-   cmake ..
+   cmake .. -DENABLE_TRACEBACK=OFF
    make -j$(nproc)
 
 Usage
